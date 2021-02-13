@@ -61,7 +61,7 @@ LoadedModules g_LoadedModules;
 __declspec(dllexport) VisualLeakDetector g_vld;
 
 // Patch only this entries in Kernel32.dll and KernelBase.dll
-patchentry_t ldrLoadDllPatch [] = {
+patchentry_t ldrLoadDllPatch[] = {
     "LdrLoadDll",             NULL, VisualLeakDetector::_LdrLoadDll,
     "LdrGetDllHandle",        NULL, VisualLeakDetector::_LdrGetDllHandle,
     "LdrGetProcedureAddress", NULL, VisualLeakDetector::_LdrGetProcedureAddress,
@@ -69,7 +69,7 @@ patchentry_t ldrLoadDllPatch [] = {
     "LdrUnlockLoaderLock",    NULL, VisualLeakDetector::_LdrUnlockLoaderLock,
     NULL,                     NULL, NULL
 };
-moduleentry_t ntdllPatch [] = {
+moduleentry_t ntdllPatch[] = {
     "ntdll.dll",    FALSE,  NULL,   ldrLoadDllPatch,
 };
 
@@ -131,9 +131,9 @@ PBYTE NtDllFindParamAddress(const PBYTE pAddress)
 #endif
             return ptr;
         }
-        }
-    return NULL;
     }
+    return NULL;
+}
 
 PBYTE NtDllFindCallAddress(const PBYTE pAddress)
 {
@@ -152,9 +152,9 @@ PBYTE NtDllFindCallAddress(const PBYTE pAddress)
 #endif
             return ptr;
         }
-        }
-    return NULL;
     }
+    return NULL;
+}
 
 typedef struct _NTDLL_LDR_PATCH {
     PBYTE pPatchAddress;
@@ -168,7 +168,7 @@ typedef struct _NTDLL_LDR_PATCH {
 NTDLL_LDR_PATCH patch;
 
 
-BOOL NtDllPatch(const PBYTE pReturnAddress, NTDLL_LDR_PATCH &NtDllPatch)
+BOOL NtDllPatch(const PBYTE pReturnAddress, NTDLL_LDR_PATCH & NtDllPatch)
 {
     if (NtDllPatch.bState == FALSE) {
 #ifdef _WIN64
@@ -213,7 +213,8 @@ BOOL NtDllPatch(const PBYTE pReturnAddress, NTDLL_LDR_PATCH &NtDllPatch)
                     // that was moved to rax. In such case identify the correct register
                     // holding the EntryPoint
                     reg = ((*(icall - 3) & 0xF1) == 0x41 ? 0x08 : 0x00) + (*(icall - 1) & 0x07);
-                } else {
+                }
+                else {
                     reg = ((pCallAddress[0] & 0xF1) == 0x41 ? 0x08 : 0x00) + (pCallAddress[pReturnAddress - pCallAddress - 1] & 0x07);
                 }
 
@@ -258,7 +259,7 @@ BOOL NtDllPatch(const PBYTE pReturnAddress, NTDLL_LDR_PATCH &NtDllPatch)
 }
 
 
-BOOL NtDllRestore(NTDLL_LDR_PATCH &NtDllPatch)
+BOOL NtDllRestore(NTDLL_LDR_PATCH & NtDllPatch)
 {
     // Restore patched bytes
     BOOL bResult = FALSE;
@@ -311,9 +312,9 @@ bool IsWindowsVersionOrGreater(WORD wMajorVersion, WORD wMinorVersion, WORD wSer
     OSVERSIONINFOEXW osvi = { sizeof(osvi), 0, 0, 0, 0,{ 0 }, 0, 0 };
     DWORDLONG        const dwlConditionMask = VerSetConditionMask(
         VerSetConditionMask(
-            VerSetConditionMask(
-                0, VER_MAJORVERSION, VER_GREATER_EQUAL),
-            VER_MINORVERSION, VER_GREATER_EQUAL),
+        VerSetConditionMask(
+        0, VER_MAJORVERSION, VER_GREATER_EQUAL),
+        VER_MINORVERSION, VER_GREATER_EQUAL),
         VER_SERVICEPACKMAJOR, VER_GREATER_EQUAL);
 
     osvi.dwMajorVersion = wMajorVersion;
@@ -338,18 +339,18 @@ bool IsWindows8OrGreater()
 //   attaches Visual Leak Detector to all other modules loaded into the current
 //   process.
 //
-VisualLeakDetector::VisualLeakDetector ()
+VisualLeakDetector::VisualLeakDetector()
 {
     _set_error_mode(_OUT_TO_STDERR);
 
     // Initialize configuration options and related private data.
     _wcsnset_s(m_forcedModuleList, MAXMODULELISTLENGTH, '\0', _TRUNCATE);
-    m_maxDataDump    = 0xffffffff;
+    m_maxDataDump = 0xffffffff;
     m_maxTraceFrames = 0xffffffff;
-    m_options        = 0x0;
-    m_reportFile     = NULL;
+    m_options = 0x0;
+    m_reportFile = NULL;
     wcsncpy_s(m_reportFilePath, MAX_PATH, VLD_DEFAULT_REPORT_FILE_NAME, _TRUNCATE);
-    m_status         = 0x0;
+    m_status = 0x0;
 
     HMODULE ntdll = GetModuleHandleW(L"ntdll.dll");
     if (ntdll)
@@ -357,7 +358,8 @@ VisualLeakDetector::VisualLeakDetector ()
         if (!IsWindows8OrGreater())
         {
             LdrLoadDll = (LdrLoadDll_t)GetProcAddress(ntdll, "LdrLoadDll");
-        } else
+        }
+        else
         {
             LdrLoadDllWin8 = (LdrLoadDllWin8_t)GetProcAddress(ntdll, "LdrLoadDll");
             ldrLoadDllPatch[0].replacement = _LdrLoadDllWin8;
@@ -386,7 +388,7 @@ VisualLeakDetector::VisualLeakDetector ()
     if (!IsWindows7OrGreater()) // kernel32.dll
     {
         if (kernel32)
-            m_GetProcAddress = (GetProcAddress_t) GetProcAddress(kernel32, "GetProcAddress");
+            m_GetProcAddress = (GetProcAddress_t)GetProcAddress(kernel32, "GetProcAddress");
     }
     else
     {
@@ -400,43 +402,43 @@ VisualLeakDetector::VisualLeakDetector ()
     }
 
     // Initialize global variables.
-    g_currentProcess    = GetCurrentProcess();
-    g_currentThread     = GetCurrentThread();
-    g_processHeap       = GetProcessHeap();
+    g_currentProcess = GetCurrentProcess();
+    g_currentThread = GetCurrentThread();
+    g_processHeap = GetProcessHeap();
 
     LoaderLock ll;
 
     g_heapMapLock.Initialize();
-    g_vldHeap         = HeapCreate(0x0, 0, 0);
+    g_vldHeap = HeapCreate(0x0, 0, 0);
     g_vldHeapLock.Initialize();
-    g_pReportHooks    = new ReportHookSet;
+    g_pReportHooks = new ReportHookSet;
 
     // Initialize remaining private data.
-    m_heapMap         = new HeapMap;
+    m_heapMap = new HeapMap;
     m_heapMap->reserve(HEAP_MAP_RESERVE);
-    m_iMalloc         = NULL;
-    m_requestCurr     = 1;
-    m_totalAlloc      = 0;
-    m_curAlloc        = 0;
-    m_maxAlloc        = 0;
-    m_loadedModules   = new ModuleSet();
+    m_iMalloc = NULL;
+    m_requestCurr = 1;
+    m_totalAlloc = 0;
+    m_curAlloc = 0;
+    m_maxAlloc = 0;
+    m_loadedModules = new ModuleSet();
     m_optionsLock.Initialize();
     m_modulesLock.Initialize();
-    m_selfTestFile    = __FILE__;
-    m_selfTestLine    = 0;
-    m_tlsIndex        = TlsAlloc();
+    m_selfTestFile = __FILE__;
+    m_selfTestLine = 0;
+    m_tlsIndex = TlsAlloc();
     m_tlsLock.Initialize();
-    m_tlsMap          = new TlsMap;
+    m_tlsMap = new TlsMap;
 
     if (m_options & VLD_OPT_SELF_TEST) {
         // Self-test mode has been enabled. Intentionally leak a small amount of
         // memory so that memory leak self-checking can be verified.
         if (m_options & VLD_OPT_UNICODE_REPORT) {
-            wcsncpy_s(new WCHAR [wcslen(SELFTESTTEXTW) + 1], wcslen(SELFTESTTEXTW) + 1, SELFTESTTEXTW, _TRUNCATE);
+            wcsncpy_s(new WCHAR[wcslen(SELFTESTTEXTW) + 1], wcslen(SELFTESTTEXTW) + 1, SELFTESTTEXTW, _TRUNCATE);
             m_selfTestLine = __LINE__ - 1;
         }
         else {
-            strncpy_s(new CHAR [strlen(SELFTESTTEXTA) + 1], strlen(SELFTESTTEXTA) + 1, SELFTESTTEXTA, _TRUNCATE);
+            strncpy_s(new CHAR[strlen(SELFTESTTEXTA) + 1], strlen(SELFTESTTEXTA) + 1, SELFTESTTEXTA, _TRUNCATE);
             m_selfTestLine = __LINE__ - 1;
         }
     }
@@ -458,7 +460,7 @@ VisualLeakDetector::VisualLeakDetector ()
     // we got a valid TLS index.
     if (m_tlsIndex == TLS_OUT_OF_INDEXES) {
         Report(L"ERROR: Visual Leak Detector could not be installed because thread local"
-            L"  storage could not be allocated.");
+               L"  storage could not be allocated.");
         return;
     }
 
@@ -482,9 +484,9 @@ VisualLeakDetector::VisualLeakDetector ()
     DbgTrace(L"dbghelp32.dll %i: SymInitializeW\n", GetCurrentThreadId());
     if (!g_DbgHelp.SymInitializeW(g_currentProcess, symbolpath, FALSE)) {
         Report(L"WARNING: Visual Leak Detector: The symbol handler failed to initialize (error=%lu).\n"
-            L"    File and function names will probably not be available in call stacks.\n", GetLastError());
+               L"    File and function names will probably not be available in call stacks.\n", GetLastError());
     }
-    delete [] symbolpath;
+    delete[] symbolpath;
 
     ntdllPatch[0].moduleBase = (UINT_PTR)ntdll;
     PatchImport(kernel32, ntdllPatch);
@@ -510,9 +512,9 @@ VisualLeakDetector::VisualLeakDetector ()
     if (m_status & VLD_STATUS_FORCE_REPORT_TO_FILE) {
         // The report is being forced to a file. Let the human know why.
         Report(L"NOTE: Visual Leak Detector: Unicode-encoded reporting has been enabled, but the\n"
-            L"  debugger is the only selected report destination. The debugger cannot display\n"
-            L"  Unicode characters, so the report will also be sent to a file. If no file has\n"
-            L"  been specified, the default file name is \"" VLD_DEFAULT_REPORT_FILE_NAME L"\".\n");
+               L"  debugger is the only selected report destination. The debugger cannot display\n"
+               L"  Unicode characters, so the report will also be sent to a file. If no file has\n"
+               L"  been specified, the default file name is \"" VLD_DEFAULT_REPORT_FILE_NAME L"\".\n");
     }
     reportConfig();
 }
@@ -568,7 +570,7 @@ void VisualLeakDetector::checkInternalMemoryLeaks()
 {
     const char* leakfile = NULL;
     size_t count;
-    WCHAR leakfilew [MAX_PATH];
+    WCHAR leakfilew[MAX_PATH];
     int leakline = 0;
 
     // Do a memory leak self-check.
@@ -611,7 +613,7 @@ void VisualLeakDetector::checkInternalMemoryLeaks()
 //   process, frees internally allocated resources, and generates the memory
 //   leak report.
 //
-VisualLeakDetector::~VisualLeakDetector ()
+VisualLeakDetector::~VisualLeakDetector()
 {
     LoaderLock ll;
 
@@ -658,7 +660,7 @@ VisualLeakDetector::~VisualLeakDetector ()
         DbgTrace(L"dbghelp32.dll %i: SymCleanup\n", GetCurrentThreadId());
         if (!g_DbgHelp.SymCleanup(g_currentProcess)) {
             Report(L"WARNING: Visual Leak Detector: The symbol handler failed to deallocate resources (error=%lu).\n",
-                GetLastError());
+                   GetLastError());
         }
 
         {
@@ -685,7 +687,7 @@ VisualLeakDetector::~VisualLeakDetector ()
         }
         if (threadsactive) {
             Report(L"WARNING: Visual Leak Detector: Some threads appear to have not terminated normally.\n"
-                L"  This could cause inaccurate leak detection results, including false positives.\n");
+                   L"  This could cause inaccurate leak detection results, including false positives.\n");
         }
         Report(L"Visual Leak Detector is now exiting.\n");
 
@@ -728,10 +730,10 @@ VisualLeakDetector::~VisualLeakDetector ()
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-UINT32 VisualLeakDetector::getModuleState(ModuleSet::Iterator& it, UINT32& moduleFlags)
+UINT32 VisualLeakDetector::getModuleState(ModuleSet::Iterator & it, UINT32 & moduleFlags)
 {
     const moduleinfo_t& moduleinfo = *it;
-    DWORD64 modulebase = (DWORD64) moduleinfo.addrLow;
+    DWORD64 modulebase = (DWORD64)moduleinfo.addrLow;
     moduleFlags = 0;
 
     if (!GetCallingModule((UINT_PTR)modulebase)) // module unloaded
@@ -747,7 +749,7 @@ UINT32 VisualLeakDetector::getModuleState(ModuleSet::Iterator& it, UINT32& modul
             return 1;
     }
 
-    if (IsModulePatched((HMODULE) modulebase, m_patchTable, _countof(m_patchTable)))
+    if (IsModulePatched((HMODULE)modulebase, m_patchTable, _countof(m_patchTable)))
     {
         // This module is already attached. Just update the module's
         // flags, nothing more.
@@ -783,7 +785,7 @@ static char dbghelp32_assert[sizeof(IMAGEHLP_MODULE64) == 3256 ? 1 : -1];
 //
 //    None.
 //
-VOID VisualLeakDetector::attachToLoadedModules (ModuleSet *newmodules)
+VOID VisualLeakDetector::attachToLoadedModules(ModuleSet * newmodules)
 {
     LoaderLock ll;
     CriticalSectionLocker<DbgHelp> locker(g_DbgHelp);
@@ -797,17 +799,17 @@ VOID VisualLeakDetector::attachToLoadedModules (ModuleSet *newmodules)
         if (state == 0 || state == 2)
             continue;
 
-        DWORD64 modulebase = (DWORD64) (*newit).addrLow;
+        DWORD64 modulebase = (DWORD64)(*newit).addrLow;
         LPCWSTR modulename = (*newit).name.c_str();
         LPCWSTR modulepath = (*newit).path.c_str();
-        DWORD modulesize   = (DWORD)((*newit).addrHigh - (*newit).addrLow) + 1;
+        DWORD modulesize = (DWORD)((*newit).addrHigh - (*newit).addrLow) + 1;
 
         if ((state == 3) && (moduleFlags & VLD_MODULE_SYMBOLSLOADED)) {
             // Discard the previously loaded symbols, so we can refresh them.
             DbgTrace(L"dbghelp32.dll %i: SymUnloadModule64\n", GetCurrentThreadId());
             if (g_DbgHelp.SymUnloadModule64(g_currentProcess, modulebase, locker) == false) {
                 Report(L"WARNING: Visual Leak Detector: Failed to unload the symbols for %s. Function names and line"
-                    L" numbers shown in the memory leak report for %s may be inaccurate.\n", modulename, modulename);
+                       L" numbers shown in the memory leak report for %s may be inaccurate.\n", modulename, modulename);
             }
         }
 
@@ -841,7 +843,7 @@ VOID VisualLeakDetector::attachToLoadedModules (ModuleSet *newmodules)
 
         // increase reference count to module
         HMODULE modulelocal = NULL;
-        if (!GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCTSTR) modulebase, &modulelocal))
+        if (!GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCTSTR)modulebase, &modulelocal))
             continue;
 
         if (!FindImport(modulelocal, m_vldBase, VLDDLL, "?g_vld@@3VVisualLeakDetector@@A"))
@@ -877,7 +879,7 @@ VOID VisualLeakDetector::attachToLoadedModules (ModuleSet *newmodules)
                 {
                     if (wcsstr(m_forcedModuleList, modulename) != NULL) {
                         // Exclude this module from leak detection.
-                         moduleFlags |= VLD_MODULE_EXCLUDED;
+                        moduleFlags |= VLD_MODULE_EXCLUDED;
                     }
                 }
             }
@@ -889,8 +891,18 @@ VOID VisualLeakDetector::attachToLoadedModules (ModuleSet *newmodules)
             // traces through this module may lack information, like line numbers
             // and function names.
             Report(L"WARNING: Visual Leak Detector: A module, %s, included in memory leak detection\n"
-                L"  does not have any debugging symbols available, or they could not be located.\n"
-                L"  Function names and/or line numbers for this module may not be available.\n", modulename);
+                   L"  does not have any debugging symbols available, or they could not be located.\n"
+                   L"  Function names and/or line numbers for this module may not be available.\n", modulename);
+        }
+
+        // (Ashita) Skip proxy modules for Direct3D8..
+        if (_wcsicmp(modulename, L"d3d8.dll") == 0)
+        {
+            if (moduleFlags & VLD_MODULE_EXCLUDED && m_options & VLD_OPT_SKIP_D3D8PROXYDLLS)
+            {
+                FreeLibrary(modulelocal);
+                continue;
+            }
         }
 
         // Update the module's flags in the "new modules" set.
@@ -914,14 +926,14 @@ VOID VisualLeakDetector::attachToLoadedModules (ModuleSet *newmodules)
 //    Returns a string containing the search path. The caller is responsible for
 //    freeing the string.
 //
-LPWSTR VisualLeakDetector::buildSymbolSearchPath ()
+LPWSTR VisualLeakDetector::buildSymbolSearchPath()
 {
     // Oddly, the symbol handler ignores the link to the PDB embedded in the
     // executable image. So, we'll manually add the location of the executable
     // to the search path since that is often where the PDB will be located.
-    WCHAR   directory [_MAX_DIR] = {0};
-    WCHAR   drive [_MAX_DRIVE] = {0};
-    LPWSTR  path = new WCHAR [MAX_PATH * 4];
+    WCHAR   directory[_MAX_DIR] = { 0 };
+    WCHAR   drive[_MAX_DRIVE] = { 0 };
+    LPWSTR  path = new WCHAR[MAX_PATH * 4];
     path[0] = L'\0';
 
     HMODULE module = GetModuleHandleW(NULL);
@@ -942,40 +954,40 @@ LPWSTR VisualLeakDetector::buildSymbolSearchPath ()
     // Append %_NT_SYMBOL_PATH%.
     DWORD   envlen = GetEnvironmentVariable(L"_NT_SYMBOL_PATH", NULL, 0);
     if (envlen != 0) {
-        LPWSTR env = new WCHAR [envlen];
+        LPWSTR env = new WCHAR[envlen];
         if (GetEnvironmentVariable(L"_NT_SYMBOL_PATH", env, envlen) != 0) {
             path = AppendString(path, env);
             path = AppendString(path, L";");
         }
-        delete [] env;
+        delete[] env;
     }
 
     // Append %_NT_ALT_SYMBOL_PATH%.
     envlen = GetEnvironmentVariable(L"_NT_ALT_SYMBOL_PATH", NULL, 0);
     if (envlen != 0) {
-        LPWSTR env = new WCHAR [envlen];
+        LPWSTR env = new WCHAR[envlen];
         if (GetEnvironmentVariable(L"_NT_ALT_SYMBOL_PATH", env, envlen) != 0) {
             path = AppendString(path, env);
             path = AppendString(path, L";");
         }
-        delete [] env;
+        delete[] env;
     }
 
     // Append %_NT_ALTERNATE_SYMBOL_PATH%.
     envlen = GetEnvironmentVariable(L"_NT_ALTERNATE_SYMBOL_PATH", NULL, 0);
     if (envlen != 0) {
-        LPWSTR env = new WCHAR [envlen];
+        LPWSTR env = new WCHAR[envlen];
         if (GetEnvironmentVariable(L"_NT_ALTERNATE_SYMBOL_PATH", env, envlen) != 0) {
             path = AppendString(path, env);
             path = AppendString(path, L";");
         }
-        delete [] env;
+        delete[] env;
     }
 
-//#if _MSC_VER > 1900
-//#error Not supported VS
-//#endif
-    // Append Visual Studio 2015/2013/2012/2010/2008 symbols cache directory.
+    //#if _MSC_VER > 1900
+    //#error Not supported VS
+    //#endif
+        // Append Visual Studio 2015/2013/2012/2010/2008 symbols cache directory.
     for (UINT n = 9; n <= 14; ++n) {
         WCHAR debuggerpath[MAX_PATH] = { 0 };
         swprintf(debuggerpath, _countof(debuggerpath), L"Software\\Microsoft\\VisualStudio\\%u.0\\Debugger", n);
@@ -1002,7 +1014,7 @@ LPWSTR VisualLeakDetector::buildSymbolSearchPath ()
     SIZE_T  length = wcslen(path);
     while (pos < length) {
         if (path[pos] == L'\"') {
-            for (SIZE_T  index = pos; index < length; index++) {
+            for (SIZE_T index = pos; index < length; index++) {
                 path[index] = path[index + 1];
             }
         }
@@ -1021,7 +1033,7 @@ LPWSTR VisualLeakDetector::buildSymbolSearchPath ()
 //
 BOOL VisualLeakDetector::GetIniFilePath(LPTSTR lpPath, SIZE_T cchPath)
 {
-    TCHAR  path[MAX_PATH] = {0};
+    TCHAR  path[MAX_PATH] = { 0 };
     struct _stat s;
     DWORD written = 0;
 
@@ -1097,9 +1109,9 @@ BOOL VisualLeakDetector::GetIniFilePath(LPTSTR lpPath, SIZE_T cchPath)
 //
 //    None.
 //
-VOID VisualLeakDetector::configure ()
+VOID VisualLeakDetector::configure()
 {
-    TCHAR  inipath [MAX_PATH] = {0};
+    TCHAR  inipath[MAX_PATH] = { 0 };
     BOOL found = GetIniFilePath(inipath, _countof(inipath));
 
     Report(L"Visual Leak Detector read settings from: %s\n", found ? inipath : L"(default settings)");
@@ -1161,7 +1173,7 @@ VOID VisualLeakDetector::configure ()
         m_options |= VLD_OPT_MODULE_LIST_INCLUDE;
 
     // Read the report destination (debugger, file, or both).
-    WCHAR filename [MAX_PATH] = {0};
+    WCHAR filename[MAX_PATH] = { 0 };
     LoadStringOption(L"ReportFile", filename, MAX_PATH, inipath);
     if (filename[0] == '\0') {
         wcsncpy_s(filename, MAX_PATH, VLD_DEFAULT_REPORT_FILE_NAME, _TRUNCATE);
@@ -1205,6 +1217,14 @@ VOID VisualLeakDetector::configure ()
     if (LoadBoolOption(L"ValidateHeapAllocs", L"", inipath)) {
         m_options |= VLD_OPT_VALIDATE_HEAPFREE;
     }
+
+    /**
+     * Ashita custom options.
+     */
+    if (LoadBoolOption(L"SkipD3D8ProxyDLLs", L"", inipath)) {
+        ::OutputDebugStringA(u8"Skipping Direct3D8 proxies..\r\n");
+        m_options |= VLD_OPT_SKIP_D3D8PROXYDLLS;
+    }
 }
 
 // enabled - Determines if memory leak detection is enabled for the current
@@ -1215,7 +1235,7 @@ VOID VisualLeakDetector::configure ()
 //    Returns true if Visual Leak Detector is enabled for the current thread.
 //    Otherwise, returns false.
 //
-BOOL VisualLeakDetector::enabled ()
+BOOL VisualLeakDetector::enabled()
 {
     if (!(m_status & VLD_STATUS_INSTALLED)) {
         // Memory leak detection is not yet enabled because VLD is still
@@ -1248,7 +1268,7 @@ BOOL VisualLeakDetector::enabled ()
 //
 //    Returns the number of duplicate blocks erased from the block map.
 //
-SIZE_T VisualLeakDetector::eraseDuplicates (const BlockMap::Iterator &element, Set<blockinfo_t*> &aggregatedLeaks)
+SIZE_T VisualLeakDetector::eraseDuplicates(const BlockMap::Iterator & element, Set<blockinfo_t*> &aggregatedLeaks)
 {
     blockinfo_t *elementinfo = (*element).second;
 
@@ -1291,7 +1311,7 @@ SIZE_T VisualLeakDetector::eraseDuplicates (const BlockMap::Iterator &element, S
 //    Returns a pointer to the thread local storage structure. (This function
 //    always succeeds).
 //
-tls_t* VisualLeakDetector::getTls ()
+tls_t* VisualLeakDetector::getTls()
 {
     // Get the pointer to this thread's thread local storage structure.
     tls_t* tls = (tls_t*)TlsGetValue(m_tlsIndex);
@@ -1308,7 +1328,8 @@ tls_t* VisualLeakDetector::getTls ()
 
             // Add this thread's TLS to the TlsSet.
             m_tlsMap->insert(threadId, tls);
-        } else {
+        }
+        else {
             // Already had a thread with this ID
             tls = (*it).second;
         }
@@ -1344,7 +1365,7 @@ tls_t* VisualLeakDetector::getTls ()
 //
 //    None.
 //
-VOID VisualLeakDetector::mapBlock (HANDLE heap, LPCVOID mem, SIZE_T size, bool debugcrtalloc, bool ucrt, DWORD threadId, blockinfo_t* &pblockInfo)
+VOID VisualLeakDetector::mapBlock(HANDLE heap, LPCVOID mem, SIZE_T size, bool debugcrtalloc, bool ucrt, DWORD threadId, blockinfo_t * &pblockInfo)
 {
     CriticalSectionLocker<> cs(g_heapMapLock);
 
@@ -1403,7 +1424,7 @@ VOID VisualLeakDetector::mapBlock (HANDLE heap, LPCVOID mem, SIZE_T size, bool d
 //
 //    None.
 //
-VOID VisualLeakDetector::mapHeap (HANDLE heap)
+VOID VisualLeakDetector::mapHeap(HANDLE heap)
 {
     CriticalSectionLocker<> cs(g_heapMapLock);
 
@@ -1435,7 +1456,7 @@ VOID VisualLeakDetector::mapHeap (HANDLE heap)
 //
 //    None.
 //
-VOID VisualLeakDetector::unmapBlock (HANDLE heap, LPCVOID mem, const context_t &context)
+VOID VisualLeakDetector::unmapBlock(HANDLE heap, LPCVOID mem, const context_t & context)
 {
     if (NULL == mem)
         return;
@@ -1508,7 +1529,7 @@ VOID VisualLeakDetector::unmapBlock (HANDLE heap, LPCVOID mem, const context_t &
 //
 //    None.
 //
-VOID VisualLeakDetector::unmapHeap (HANDLE heap)
+VOID VisualLeakDetector::unmapHeap(HANDLE heap)
 {
     // Find this heap's block map.
     CriticalSectionLocker<> cs(g_heapMapLock);
@@ -1559,8 +1580,8 @@ VOID VisualLeakDetector::unmapHeap (HANDLE heap)
 //
 //    None.
 //
-VOID VisualLeakDetector::remapBlock (HANDLE heap, LPCVOID mem, LPCVOID newmem, SIZE_T size,
-    bool debugcrtalloc, bool ucrt, DWORD threadId, blockinfo_t* &pblockInfo, const context_t &context)
+VOID VisualLeakDetector::remapBlock(HANDLE heap, LPCVOID mem, LPCVOID newmem, SIZE_T size,
+                                    bool debugcrtalloc, bool ucrt, DWORD threadId, blockinfo_t * &pblockInfo, const context_t & context)
 {
     CriticalSectionLocker<> cs(g_heapMapLock);
 
@@ -1630,14 +1651,14 @@ VOID VisualLeakDetector::remapBlock (HANDLE heap, LPCVOID mem, LPCVOID newmem, S
 //
 //    None.
 //
-VOID VisualLeakDetector::reportConfig ()
+VOID VisualLeakDetector::reportConfig()
 {
     if (m_options & VLD_OPT_AGGREGATE_DUPLICATES) {
         Report(L"    Aggregating duplicate leaks.\n");
     }
     if (m_forcedModuleList[0] != '\0') {
         Report(L"    Forcing %s of these modules in leak detection: %s\n",
-            (m_options & VLD_OPT_MODULE_LIST_INCLUDE) ? L"inclusion" : L"exclusion", m_forcedModuleList);
+               (m_options & VLD_OPT_MODULE_LIST_INCLUDE) ? L"inclusion" : L"exclusion", m_forcedModuleList);
     }
     if (m_maxDataDump != VLD_DEFAULT_MAX_DATA_DUMP) {
         if (m_maxDataDump == 0) {
@@ -1676,9 +1697,13 @@ VOID VisualLeakDetector::reportConfig ()
     if (m_options & VLD_OPT_TRACE_INTERNAL_FRAMES) {
         Report(L"    Including heap and VLD internal frames in stack traces.\n");
     }
+
+    if (m_options & VLD_OPT_SKIP_D3D8PROXYDLLS) {
+        Report(L"    (Ashita) Ignoring D3D8 proxy DLLs.\n");
+    }
 }
 
-bool VisualLeakDetector::isDebugCrtAlloc( LPCVOID block, blockinfo_t* info )
+bool VisualLeakDetector::isDebugCrtAlloc(LPCVOID block, blockinfo_t * info)
 {
     // Autodetection allocations from statically linked CRT
     if (!info->debugCrtAlloc) {
@@ -1713,9 +1738,9 @@ bool VisualLeakDetector::isDebugCrtAlloc( LPCVOID block, blockinfo_t* info )
 //
 //    None.
 //
-SIZE_T VisualLeakDetector::getLeaksCount (heapinfo_t* heapinfo, DWORD threadId)
+SIZE_T VisualLeakDetector::getLeaksCount(heapinfo_t * heapinfo, DWORD threadId)
 {
-    BlockMap* blockmap   = &heapinfo->blockMap;
+    BlockMap* blockmap = &heapinfo->blockMap;
     SIZE_T memoryleaks = 0;
 
     for (BlockMap::Iterator blockit = blockmap->begin(); blockit != blockmap->end(); ++blockit)
@@ -1752,7 +1777,7 @@ SIZE_T VisualLeakDetector::getLeaksCount (heapinfo_t* heapinfo, DWORD threadId)
             }
         }
 
-        memoryleaks ++;
+        memoryleaks++;
     }
 
     return memoryleaks;
@@ -1767,7 +1792,7 @@ SIZE_T VisualLeakDetector::getLeaksCount (heapinfo_t* heapinfo, DWORD threadId)
 //
 //    None.
 //
-SIZE_T VisualLeakDetector::reportHeapLeaks (HANDLE heap)
+SIZE_T VisualLeakDetector::reportHeapLeaks(HANDLE heap)
 {
     assert(heap != NULL);
 
@@ -1788,8 +1813,8 @@ SIZE_T VisualLeakDetector::reportHeapLeaks (HANDLE heap)
     // Show a summary.
     if (leaks_count != 0) {
         Report(L"Visual Leak Detector detected %Iu memory leak%s in heap " ADDRESSFORMAT L"\n",
-            leaks_count, (leaks_count > 1) ? L"s" : L"", heap);
-     }
+               leaks_count, (leaks_count > 1) ? L"s" : L"", heap);
+    }
     return leaks_count;
 }
 
@@ -1821,9 +1846,9 @@ size_t VisualLeakDetector::getCrtBlockSize(LPCVOID block, bool ucrt)
     }
 }
 
-SIZE_T VisualLeakDetector::reportLeaks (heapinfo_t* heapinfo, bool &firstLeak, Set<blockinfo_t*> &aggregatedLeaks, DWORD threadId)
+SIZE_T VisualLeakDetector::reportLeaks(heapinfo_t * heapinfo, bool &firstLeak, Set<blockinfo_t*> &aggregatedLeaks, DWORD threadId)
 {
-    BlockMap* blockmap   = &heapinfo->blockMap;
+    BlockMap* blockmap = &heapinfo->blockMap;
     SIZE_T leaksFound = 0;
 
     for (BlockMap::Iterator blockit = blockmap->begin(); blockit != blockmap->end(); ++blockit)
@@ -1845,10 +1870,10 @@ SIZE_T VisualLeakDetector::reportLeaks (heapinfo_t* heapinfo, bool &firstLeak, S
         LPCVOID address = block;
         SIZE_T size = info->size;
 
-        if (isDebugCrtAlloc( block, info )) {
+        if (isDebugCrtAlloc(block, info)) {
             // This block is allocated to a CRT heap, so the block has a CRT
             // memory block header pretended to it.
-            int blockUse = getCrtBlockUse( block, info->ucrt );
+            int blockUse = getCrtBlockUse(block, info->ucrt);
             // Leaks identified as CRT_USE_IGNORE should not be ignored here otherwise
             // DynamicLoader/Thread test will randomly fail with less leaks being reported.
             if (CRT_USE_TYPE(blockUse) == CRT_USE_FREE ||
@@ -1931,9 +1956,9 @@ SIZE_T VisualLeakDetector::reportLeaks (heapinfo_t* heapinfo, bool &firstLeak, S
     return leaksFound;
 }
 
-VOID VisualLeakDetector::markAllLeaksAsReported (heapinfo_t* heapinfo, DWORD threadId)
+VOID VisualLeakDetector::markAllLeaksAsReported(heapinfo_t * heapinfo, DWORD threadId)
 {
-    BlockMap* blockmap   = &heapinfo->blockMap;
+    BlockMap* blockmap = &heapinfo->blockMap;
 
     for (BlockMap::Iterator blockit = blockmap->begin(); blockit != blockmap->end(); ++blockit)
     {
@@ -1954,25 +1979,25 @@ VOID VisualLeakDetector::markAllLeaksAsReported (heapinfo_t* heapinfo, DWORD thr
 //  Return Value:
 //   If mem is found, it will return the blockinfo_t pointer, otherwise NULL
 //
-blockinfo_t* VisualLeakDetector::findAllocedBlock(LPCVOID mem, __out HANDLE& heap)
+blockinfo_t* VisualLeakDetector::findAllocedBlock(LPCVOID mem, __out HANDLE & heap)
 {
     heap = NULL;
     blockinfo_t* result = NULL;
     // Iterate through all heaps
     CriticalSectionLocker<> cs(g_heapMapLock);
     for (HeapMap::Iterator it = m_heapMap->begin();
-        it != m_heapMap->end();
-        ++it)
+         it != m_heapMap->end();
+         ++it)
     {
-        HANDLE heap_handle  = (*it).first;
+        HANDLE heap_handle = (*it).first;
         (heap_handle); // unused
         heapinfo_t* heapPtr = (*it).second;
 
         // Iterate through all memory blocks in each heap
         BlockMap& p_block_map = heapPtr->blockMap;
         for (BlockMap::Iterator iter = p_block_map.begin();
-            iter != p_block_map.end();
-            ++iter)
+             iter != p_block_map.end();
+             ++iter)
         {
             if ((*iter).first == mem)
             {
@@ -2023,13 +2048,13 @@ blockinfo_t* VisualLeakDetector::findAllocedBlock(LPCVOID mem, __out HANDLE& hea
 //    Always returns TRUE, which tells EnumerateLoadedModules64 to continue
 //    enumerating.
 //
-BOOL VisualLeakDetector::addLoadedModule (PCWSTR modulepath, DWORD64 modulebase, ULONG modulesize, PVOID context)
+BOOL VisualLeakDetector::addLoadedModule(PCWSTR modulepath, DWORD64 modulebase, ULONG modulesize, PVOID context)
 {
     vldstring modulepathw(modulepath);
 
     // Extract just the filename and extension from the module path.
-    WCHAR filename [_MAX_FNAME];
-    WCHAR extension [_MAX_EXT];
+    WCHAR filename[_MAX_FNAME];
+    WCHAR extension[_MAX_EXT];
     _wsplitpath_s(modulepathw.c_str(), NULL, 0, NULL, 0, filename, _MAX_FNAME, extension, _MAX_EXT);
 
     vldstring modulename(filename);
@@ -2054,16 +2079,22 @@ BOOL VisualLeakDetector::addLoadedModule (PCWSTR modulepath, DWORD64 modulebase,
             }
         }
 
-        delete [] modulenamea;
+        delete[] modulenamea;
     }
 
     // Record the module's information and store it in the set.
     moduleinfo_t  moduleinfo;
-    moduleinfo.addrLow  = (UINT_PTR)modulebase;
+    moduleinfo.addrLow = (UINT_PTR)modulebase;
     moduleinfo.addrHigh = (UINT_PTR)(modulebase + modulesize) - 1;
-    moduleinfo.flags    = 0x0;
-    moduleinfo.name     = modulename;
-    moduleinfo.path     = modulepathw;
+    moduleinfo.flags = 0x0;
+    moduleinfo.name = modulename;
+    moduleinfo.path = modulepathw;
+
+    // Check for d3d8.dll entries we do not want..
+    if (g_vld.m_options & VLD_OPT_SKIP_D3D8PROXYDLLS) {
+        if (_wcsicmp(modulename.c_str(), L"d3d8.dll") == 0)
+            moduleinfo.flags = VLD_MODULE_EXCLUDED;
+    }
 
     ModuleSet*    newmodules = (ModuleSet*)context;
     newmodules->insert(moduleinfo);
@@ -2089,8 +2120,8 @@ BOOL VisualLeakDetector::addLoadedModule (PCWSTR modulepath, DWORD64 modulebase,
 //
 //    Always returns TRUE.
 //
-BOOL VisualLeakDetector::detachFromModule (PCWSTR /*modulepath*/, DWORD64 modulebase, ULONG /*modulesize*/,
-    PVOID /*context*/)
+BOOL VisualLeakDetector::detachFromModule(PCWSTR /*modulepath*/, DWORD64 modulebase, ULONG /*modulesize*/,
+                                          PVOID /*context*/)
 {
     UINT tablesize = _countof(m_patchTable);
 
@@ -2122,7 +2153,7 @@ BOOL VisualLeakDetector::detachFromModule (PCWSTR /*modulepath*/, DWORD64 module
 //    Returns a pointer to the requested function, or VLD's replacement for
 //    the function, if there is a replacement function.
 //
-FARPROC VisualLeakDetector::_GetProcAddress (HMODULE module, LPCSTR procname)
+FARPROC VisualLeakDetector::_GetProcAddress(HMODULE module, LPCSTR procname)
 {
     FARPROC original = g_vld._RGetProcAddress(module, procname);
     if (original) {
@@ -2149,7 +2180,8 @@ FARPROC VisualLeakDetector::_GetProcAddress (HMODULE module, LPCSTR procname)
                             *patchentry->original = original;
                         return (FARPROC)patchentry->replacement;
                     }
-                } else {
+                }
+                else {
                     // Import name is a function name value.
                     if (strcmp(patchentry->importName, procname) == 0) {
                         if (patchentry->original != NULL)
@@ -2217,7 +2249,8 @@ FARPROC VisualLeakDetector::_GetProcAddressForCaller(HMODULE module, LPCSTR proc
                             *patchentry->original = original;
                         return (FARPROC)patchentry->replacement;
                     }
-                } else {
+                }
+                else {
                     // Import name is a function name value.
                     if (strcmp(patchentry->importName, procname) == 0) {
                         if (patchentry->original != NULL)
@@ -2262,23 +2295,23 @@ FARPROC VisualLeakDetector::_RGetProcAddressForCaller(HMODULE module, LPCSTR pro
 //
 //    Returns the value returned by LdrLoadDll.
 //
-NTSTATUS VisualLeakDetector::_LdrLoadDll (LPWSTR searchpath, PULONG flags, unicodestring_t *modulename,
-    PHANDLE modulehandle)
+NTSTATUS VisualLeakDetector::_LdrLoadDll(LPWSTR searchpath, PULONG flags, unicodestring_t * modulename,
+                                         PHANDLE modulehandle)
 {
     // Load the DLL
     NTSTATUS status = LdrLoadDll(searchpath, flags, modulename, modulehandle);
     return status;
 }
 
-NTSTATUS VisualLeakDetector::_LdrLoadDllWin8 (DWORD_PTR reserved, PULONG flags, unicodestring_t *modulename,
-                                          PHANDLE modulehandle)
+NTSTATUS VisualLeakDetector::_LdrLoadDllWin8(DWORD_PTR reserved, PULONG flags, unicodestring_t * modulename,
+                                             PHANDLE modulehandle)
 {
     // Load the DLL
     NTSTATUS status = LdrLoadDllWin8(reserved, flags, modulename, modulehandle);
     return status;
 }
 
-NTSTATUS VisualLeakDetector::_LdrGetDllHandle(IN PWSTR DllPath OPTIONAL, IN PULONG DllCharacteristics OPTIONAL, IN PUNICODE_STRING DllName, OUT PVOID *DllHandle OPTIONAL)
+NTSTATUS VisualLeakDetector::_LdrGetDllHandle(IN PWSTR DllPath OPTIONAL, IN PULONG DllCharacteristics OPTIONAL, IN PUNICODE_STRING DllName, OUT PVOID * DllHandle OPTIONAL)
 {
     LoaderLock ll;
 
@@ -2342,7 +2375,7 @@ bool VisualLeakDetector::isModuleExcluded(UINT_PTR address)
 {
     moduleinfo_t         moduleinfo;
     ModuleSet::Iterator  moduleit;
-    moduleinfo.addrLow  = address;
+    moduleinfo.addrLow = address;
     moduleinfo.addrHigh = address + 1024;
     moduleinfo.flags = 0;
 
@@ -2391,7 +2424,7 @@ SIZE_T VisualLeakDetector::GetThreadLeaksCount(DWORD threadId)
     return leaksCount;
 }
 
-SIZE_T VisualLeakDetector::ReportLeaks( )
+SIZE_T VisualLeakDetector::ReportLeaks()
 {
     if (m_options & VLD_OPT_VLDOFF) {
         // VLD has been turned off.
@@ -2412,7 +2445,7 @@ SIZE_T VisualLeakDetector::ReportLeaks( )
     return leaksCount;
 }
 
-SIZE_T VisualLeakDetector::ReportThreadLeaks( DWORD threadId )
+SIZE_T VisualLeakDetector::ReportThreadLeaks(DWORD threadId)
 {
     if (m_options & VLD_OPT_VLDOFF) {
         // VLD has been turned off.
@@ -2433,7 +2466,7 @@ SIZE_T VisualLeakDetector::ReportThreadLeaks( DWORD threadId )
     return leaksCount;
 }
 
-VOID VisualLeakDetector::MarkAllLeaksAsReported( )
+VOID VisualLeakDetector::MarkAllLeaksAsReported()
 {
     if (m_options & VLD_OPT_VLDOFF) {
         // VLD has been turned off.
@@ -2450,7 +2483,7 @@ VOID VisualLeakDetector::MarkAllLeaksAsReported( )
     }
 }
 
-VOID VisualLeakDetector::MarkThreadLeaksAsReported( DWORD threadId )
+VOID VisualLeakDetector::MarkThreadLeaksAsReported(DWORD threadId)
 {
     if (m_options & VLD_OPT_VLDOFF) {
         // VLD has been turned off.
@@ -2473,12 +2506,12 @@ void VisualLeakDetector::ChangeModuleState(HMODULE module, bool on)
 
     CriticalSectionLocker<> cs(m_modulesLock);
     moduleit = m_loadedModules->begin();
-    while( moduleit != m_loadedModules->end() )
+    while (moduleit != m_loadedModules->end())
     {
-        if ( (*moduleit).addrLow == (UINT_PTR)module)
+        if ((*moduleit).addrLow == (UINT_PTR)module)
         {
             moduleinfo_t *mod = (moduleinfo_t *)&(*moduleit);
-            if ( on )
+            if (on)
                 mod->flags &= ~VLD_MODULE_EXCLUDED;
             else
                 mod->flags |= VLD_MODULE_EXCLUDED;
@@ -2496,7 +2529,7 @@ void VisualLeakDetector::EnableModule(HMODULE module)
         return;
     }
 
-    ChangeModuleState(module,true);
+    ChangeModuleState(module, true);
 }
 
 void VisualLeakDetector::DisableModule(HMODULE module)
@@ -2506,10 +2539,10 @@ void VisualLeakDetector::DisableModule(HMODULE module)
         return;
     }
 
-    ChangeModuleState(module,false);
+    ChangeModuleState(module, false);
 }
 
-void VisualLeakDetector::DisableLeakDetection ()
+void VisualLeakDetector::DisableLeakDetection()
 {
     tls_t *tls;
 
@@ -2528,7 +2561,7 @@ void VisualLeakDetector::DisableLeakDetection ()
     tls->flags |= VLD_TLS_DISABLED;
 }
 
-void VisualLeakDetector::EnableLeakDetection ()
+void VisualLeakDetector::EnableLeakDetection()
 {
     if (m_options & VLD_OPT_VLDOFF) {
         // VLD has been turned off.
@@ -2545,7 +2578,7 @@ void VisualLeakDetector::EnableLeakDetection ()
     m_status &= ~VLD_STATUS_NEVER_ENABLED;
 }
 
-void VisualLeakDetector::RestoreLeakDetectionState ()
+void VisualLeakDetector::RestoreLeakDetectionState()
 {
     tls_t *tls;
 
@@ -2560,7 +2593,7 @@ void VisualLeakDetector::RestoreLeakDetectionState ()
     tls->flags |= tls->oldFlags & (VLD_TLS_DISABLED | VLD_TLS_ENABLED);
 }
 
-void VisualLeakDetector::GlobalDisableLeakDetection ()
+void VisualLeakDetector::GlobalDisableLeakDetection()
 {
     if (m_options & VLD_OPT_VLDOFF) {
         // VLD has been turned off.
@@ -2580,7 +2613,7 @@ void VisualLeakDetector::GlobalDisableLeakDetection ()
     }
 }
 
-void VisualLeakDetector::GlobalEnableLeakDetection ()
+void VisualLeakDetector::GlobalEnableLeakDetection()
 {
     if (m_options & VLD_OPT_VLDOFF) {
         // VLD has been turned off.
@@ -2602,9 +2635,9 @@ void VisualLeakDetector::GlobalEnableLeakDetection ()
 }
 
 CONST UINT32 OptionsMask = VLD_OPT_AGGREGATE_DUPLICATES | VLD_OPT_MODULE_LIST_INCLUDE |
-    VLD_OPT_SAFE_STACK_WALK | VLD_OPT_SLOW_DEBUGGER_DUMP | VLD_OPT_START_DISABLED |
-    VLD_OPT_TRACE_INTERNAL_FRAMES | VLD_OPT_SKIP_HEAPFREE_LEAKS | VLD_OPT_VALIDATE_HEAPFREE |
-    VLD_OPT_SKIP_CRTSTARTUP_LEAKS;
+VLD_OPT_SAFE_STACK_WALK | VLD_OPT_SLOW_DEBUGGER_DUMP | VLD_OPT_START_DISABLED |
+VLD_OPT_TRACE_INTERNAL_FRAMES | VLD_OPT_SKIP_HEAPFREE_LEAKS | VLD_OPT_VALIDATE_HEAPFREE |
+VLD_OPT_SKIP_CRTSTARTUP_LEAKS;
 
 UINT32 VisualLeakDetector::GetOptions()
 {
@@ -2634,7 +2667,7 @@ void VisualLeakDetector::SetOptions(UINT32 option_mask, SIZE_T maxDataDump, UINT
         GlobalDisableLeakDetection();
 }
 
-void VisualLeakDetector::SetModulesList(CONST WCHAR *modules, BOOL includeModules)
+void VisualLeakDetector::SetModulesList(CONST WCHAR * modules, BOOL includeModules)
 {
     if (m_options & VLD_OPT_VLDOFF) {
         // VLD has been turned off.
@@ -2650,7 +2683,7 @@ void VisualLeakDetector::SetModulesList(CONST WCHAR *modules, BOOL includeModule
         m_options &= ~VLD_OPT_MODULE_LIST_INCLUDE;
 }
 
-bool VisualLeakDetector::GetModulesList(WCHAR *modules, UINT size)
+bool VisualLeakDetector::GetModulesList(WCHAR * modules, UINT size)
 {
     if (m_options & VLD_OPT_VLDOFF) {
         // VLD has been turned off.
@@ -2663,7 +2696,7 @@ bool VisualLeakDetector::GetModulesList(WCHAR *modules, UINT size)
     return (m_options & VLD_OPT_MODULE_LIST_INCLUDE) > 0;
 }
 
-void VisualLeakDetector::GetReportFilename(WCHAR *filename)
+void VisualLeakDetector::GetReportFilename(WCHAR * filename)
 {
     if (m_options & VLD_OPT_VLDOFF) {
         // VLD has been turned off.
@@ -2675,7 +2708,7 @@ void VisualLeakDetector::GetReportFilename(WCHAR *filename)
     wcsncpy_s(filename, MAX_PATH, m_reportFilePath, _TRUNCATE);
 }
 
-void VisualLeakDetector::SetReportOptions(UINT32 option_mask, CONST WCHAR *filename)
+void VisualLeakDetector::SetReportOptions(UINT32 option_mask, CONST WCHAR * filename)
 {
     if (m_options & VLD_OPT_VLDOFF) {
         // VLD has been turned off.
@@ -2684,10 +2717,10 @@ void VisualLeakDetector::SetReportOptions(UINT32 option_mask, CONST WCHAR *filen
 
     CriticalSectionLocker<> cs(m_optionsLock);
     m_options &= ~(VLD_OPT_REPORT_TO_DEBUGGER | VLD_OPT_REPORT_TO_FILE |
-        VLD_OPT_REPORT_TO_STDOUT | VLD_OPT_UNICODE_REPORT); // clear used bits
+                   VLD_OPT_REPORT_TO_STDOUT | VLD_OPT_UNICODE_REPORT); // clear used bits
 
     m_options |= option_mask & VLD_OPT_REPORT_TO_DEBUGGER;
-    if ( (option_mask & VLD_OPT_REPORT_TO_FILE) && ( filename != NULL ))
+    if ((option_mask & VLD_OPT_REPORT_TO_FILE) && (filename != NULL))
     {
         wcsncpy_s(m_reportFilePath, MAX_PATH, filename, _TRUNCATE);
         m_options |= option_mask & VLD_OPT_REPORT_TO_FILE;
@@ -2706,7 +2739,7 @@ void VisualLeakDetector::SetReportOptions(UINT32 option_mask, CONST WCHAR *filen
     if (m_options & VLD_OPT_REPORT_TO_FILE) {
         setupReporting();
     }
-    else if ( m_reportFile ) { //Close the previous report file if needed.
+    else if (m_reportFile) { //Close the previous report file if needed.
         fclose(m_reportFile);
         m_reportFile = NULL;
     }
@@ -2768,7 +2801,7 @@ void VisualLeakDetector::setupReporting()
     }
     if (m_reportFile == NULL) {
         Report(L"WARNING: Visual Leak Detector: Couldn't open report file for writing: %s\n"
-            L"  The report will be sent to the debugger instead.\n", m_reportFilePath);
+               L"  The report will be sent to the debugger instead.\n", m_reportFilePath);
     }
     else {
         // Set the "report" function to write to the file.
@@ -2825,7 +2858,7 @@ const wchar_t* VisualLeakDetector::GetAllocationResolveResults(void* alloc, BOOL
     return NULL;
 }
 
-int VisualLeakDetector::resolveStacks(heapinfo_t* heapinfo)
+int VisualLeakDetector::resolveStacks(heapinfo_t * heapinfo)
 {
     int unresolvedFunctionsCount = 0;
     BlockMap& blockmap = heapinfo->blockMap;
@@ -2833,8 +2866,8 @@ int VisualLeakDetector::resolveStacks(heapinfo_t* heapinfo)
     for (BlockMap::Iterator blockit = blockmap.begin(); blockit != blockmap.end(); ++blockit) {
         // Found a block which is still in the BlockMap. We've identified a
         // potential memory leak.
-        const void* block   = (*blockit).first;
-        blockinfo_t* info   = (*blockit).second;
+        const void* block = (*blockit).first;
+        blockinfo_t* info = (*blockit).second;
         assert(info);
         if (info == NULL)
         {
@@ -2900,7 +2933,7 @@ int VisualLeakDetector::ResolveCallstacks()
     return unresolvedFunctionsCount;
 }
 
-CaptureContext::CaptureContext(void* func, context_t& context, BOOL debug, BOOL ucrt) : m_context(context) {
+CaptureContext::CaptureContext(void* func, context_t & context, BOOL debug, BOOL ucrt) : m_context(context) {
     context.func = reinterpret_cast<UINT_PTR>(func);
     m_tls = g_vld.getTls();
 
@@ -2928,22 +2961,22 @@ CaptureContext::~CaptureContext() {
         blockinfo_t* pblockInfo = NULL;
         if (m_tls->newBlockWithoutGuard == NULL) {
             g_vld.mapBlock(m_tls->heap,
-                m_tls->blockWithoutGuard,
-                m_tls->size,
-                (m_tls->flags & VLD_TLS_DEBUGCRTALLOC) != 0,
-                (m_tls->flags & VLD_TLS_UCRT) != 0,
-                m_tls->threadId,
-                pblockInfo);
+                           m_tls->blockWithoutGuard,
+                           m_tls->size,
+                           (m_tls->flags & VLD_TLS_DEBUGCRTALLOC) != 0,
+                           (m_tls->flags & VLD_TLS_UCRT) != 0,
+                           m_tls->threadId,
+                           pblockInfo);
         }
         else {
             g_vld.remapBlock(m_tls->heap,
-                m_tls->blockWithoutGuard,
-                m_tls->newBlockWithoutGuard,
-                m_tls->size,
-                (m_tls->flags & VLD_TLS_DEBUGCRTALLOC) != 0,
-                (m_tls->flags & VLD_TLS_UCRT) != 0,
-                m_tls->threadId,
-                pblockInfo, m_tls->context);
+                             m_tls->blockWithoutGuard,
+                             m_tls->newBlockWithoutGuard,
+                             m_tls->size,
+                             (m_tls->flags & VLD_TLS_DEBUGCRTALLOC) != 0,
+                             (m_tls->flags & VLD_TLS_UCRT) != 0,
+                             m_tls->threadId,
+                             pblockInfo, m_tls->context);
         }
 
         CallStack* callstack = CallStack::Create();

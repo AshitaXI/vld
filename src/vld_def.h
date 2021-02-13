@@ -43,6 +43,9 @@
 #define VLD_OPT_VALIDATE_HEAPFREE       0x2000 //   If set, VLD verifies and reports heap consistency for HeapFree calls.
 #define VLD_OPT_SKIP_CRTSTARTUP_LEAKS   0x4000 //   If set, VLD skip crt srtartup memory leaks.
 
+// Ashita Custom Options
+#define VLD_OPT_SKIP_D3D8PROXYDLLS      0x8000 //   If set, VLD will skip attaching to D3D8.dll proxy DLLs such as dgVoodoo.
+
 #define VLD_RPTHOOK_INSTALL  0
 #define VLD_RPTHOOK_REMOVE   1
 
